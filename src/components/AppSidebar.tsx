@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Coins, CalendarCheck, LogOut } from "lucide-react";
+import { LayoutDashboard, Coins, CalendarCheck, Calculator, LogOut } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
 
@@ -7,6 +7,7 @@ const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/dividendos", icon: Coins, label: "Dividendos" },
   { to: "/data-com", icon: CalendarCheck, label: "Data Com" },
+  { to: "/valuation", icon: Calculator, label: "Valuation" },
 ];
 
 interface AppSidebarProps {

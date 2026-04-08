@@ -8,6 +8,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Dividendos from "./pages/Dividendos";
 import DataCom from "./pages/DataCom";
+import Valuation from "./pages/Valuation";
 import AppLayout from "./layouts/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -34,6 +35,7 @@ const App = () => {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/dividendos" element={<Dividendos />} />
                   <Route path="/data-com" element={<DataCom />} />
+                  <Route path="/valuation" element={<Valuation />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </>
