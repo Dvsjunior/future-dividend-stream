@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Coins, CalendarCheck, Calculator, LogOut } from "lucide-react";
+import { LayoutDashboard, Coins, CalendarCheck, Calculator, BarChart3, LogOut } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
 
