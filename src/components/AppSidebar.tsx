@@ -8,6 +8,7 @@ const navItems = [
   { to: "/dividendos", icon: Coins, label: "Dividendos" },
   { to: "/data-com", icon: CalendarCheck, label: "Data Com" },
   { to: "/valuation", icon: Calculator, label: "Valuation" },
+  { to: "/economia", icon: BarChart3, label: "Economia" },
 ];
 
 interface AppSidebarProps {
