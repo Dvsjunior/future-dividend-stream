@@ -10,6 +10,7 @@ import Dividendos from "./pages/Dividendos";
 import DataCom from "./pages/DataCom";
 import Valuation from "./pages/Valuation";
 import Economia from "./pages/Economia";
+import Carteira from "./pages/Carteira";
 import AppLayout from "./layouts/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -38,6 +39,7 @@ const App = () => {
                   <Route path="/data-com" element={<DataCom />} />
                   <Route path="/valuation" element={<Valuation />} />
                   <Route path="/economia" element={<Economia />} />
+                  <Route path="/carteira" element={<Carteira />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </>
