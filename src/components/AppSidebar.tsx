@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Coins, CalendarCheck, Calculator, BarChart3, Briefcase, LogOut } from "lucide-react";
+import { LayoutDashboard, Coins, CalendarCheck, Calculator, BarChart3, Briefcase, Ticket, Wallet, LogOut } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
 
@@ -10,6 +10,8 @@ const navItems = [
   { to: "/valuation", icon: Calculator, label: "Valuation" },
   { to: "/economia", icon: BarChart3, label: "Economia" },
   { to: "/carteira", icon: Briefcase, label: "Carteira" },
+  { to: "/bilhete-premiado", icon: Ticket, label: "Bilhete Premiado" },
+  { to: "/gestao-banca", icon: Wallet, label: "Gestão de Banca" },
 ];
 
 interface AppSidebarProps {
