@@ -10,7 +10,12 @@ import { taxaJuros } from "@/data/economicData";
 import HelpTip from "@/components/HelpTip";
 
 /** Lookup automático de dados de mercado por ticker. */
-function lookupAtivo(ticker: string): Partial<Ativo> | null {
+function lookupAtivo(ticker: string): {
+  tipo: Ativo["tipo"];
+  precoAtual: number;
+  dividendYield: number;
+  precoMedioSugerido?: number;
+} | null {
   const t = ticker.trim().toUpperCase();
   if (!t) return null;
   const fii = fundosImobiliarios.find(f => f.ticker === t);
@@ -24,11 +29,7 @@ function lookupAtivo(ticker: string): Partial<Ativo> | null {
   }
   const acao = [...topAltas, ...topBaixas].find(s => s.ticker === t);
   if (acao) {
-    return {
-      tipo: "Ação",
-      precoAtual: acao.price,
-      dividendYield: 0,
-    };
+    return { tipo: "Ação", precoAtual: acao.price, dividendYield: 0 };
   }
   return null;
 }
