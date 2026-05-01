@@ -5,8 +5,33 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { fundosImobiliarios } from "@/data/mockData";
+import { fundosImobiliarios, topAltas, topBaixas } from "@/data/mockData";
 import { taxaJuros } from "@/data/economicData";
+import HelpTip from "@/components/HelpTip";
+
+/** Lookup automático de dados de mercado por ticker. */
+function lookupAtivo(ticker: string): Partial<Ativo> | null {
+  const t = ticker.trim().toUpperCase();
+  if (!t) return null;
+  const fii = fundosImobiliarios.find(f => f.ticker === t);
+  if (fii) {
+    return {
+      tipo: "FII",
+      precoAtual: fii.price,
+      dividendYield: fii.dividendYield,
+      precoMedioSugerido: fii.min52w,
+    };
+  }
+  const acao = [...topAltas, ...topBaixas].find(s => s.ticker === t);
+  if (acao) {
+    return {
+      tipo: "Ação",
+      precoAtual: acao.price,
+      dividendYield: 0,
+    };
+  }
+  return null;
+}
 
 interface Ativo {
   id: string;
