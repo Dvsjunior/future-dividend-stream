@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { dividendos, type Dividend } from "@/data/mockData";
+import { dividendos, getAtivoPrice, type Dividend } from "@/data/mockData";
+import HelpTip from "@/components/HelpTip";
 
 const tabs = [
   { key: "all", label: "Todos" },
@@ -72,33 +73,48 @@ const Dividendos = () => {
                     <tr className="border-b border-border">
                       <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">TICKER</th>
                       <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">TIPO</th>
-                      <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">VALOR</th>
-                      <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">DATA COM</th>
+                      <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">PREÇO ATIVO <HelpTip text="Cotação atual de mercado da cota do ativo." /></span>
+                      </th>
+                      <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">DIVIDENDO <HelpTip text="Valor pago por cota neste evento de provento." /></span>
+                      </th>
+                      <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">DATA COM <HelpTip text="Última data em que é necessário ter o ativo em carteira para receber o provento." /></span>
+                      </th>
                       <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">PAGAMENTO</th>
-                      <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">YIELD</th>
+                      <th className="text-left py-3 px-3 font-display text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">YIELD <HelpTip text="Rendimento percentual do provento sobre o preço da cota (mensal)." /></span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((div, i) => (
-                      <motion.tr
-                        key={`${div.ticker}-${i}`}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.03 }}
-                        className="border-b border-border/50 hover:bg-secondary/30 transition-all"
-                      >
-                        <td className="py-3 px-3 font-body font-bold text-primary">{div.ticker}</td>
-                        <td className="py-3 px-3">
-                          <span className="px-2 py-1 rounded-md bg-secondary text-secondary-foreground font-body text-sm">
-                            {div.type}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 font-body font-semibold">R$ {div.value.toFixed(2)}</td>
-                        <td className="py-3 px-3 font-body">{new Date(div.dataCom).toLocaleDateString('pt-BR')}</td>
-                        <td className="py-3 px-3 font-body">{new Date(div.dataPayment).toLocaleDateString('pt-BR')}</td>
-                        <td className="py-3 px-3 font-body text-success font-bold">{div.yieldPercent.toFixed(2)}%</td>
-                      </motion.tr>
-                    ))}
+                    {filtered.map((div, i) => {
+                      const preco = getAtivoPrice(div.ticker);
+                      return (
+                        <motion.tr
+                          key={`${div.ticker}-${i}`}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.03 }}
+                          className="border-b border-border/50 hover:bg-secondary/30 transition-all"
+                        >
+                          <td className="py-3 px-3 font-body font-bold text-primary">{div.ticker}</td>
+                          <td className="py-3 px-3">
+                            <span className="px-2 py-1 rounded-md bg-secondary text-secondary-foreground font-body text-sm">
+                              {div.type}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 font-body font-semibold text-foreground">
+                            {preco !== null ? `R$ ${preco.toFixed(2)}` : <span className="text-muted-foreground">—</span>}
+                          </td>
+                          <td className="py-3 px-3 font-body font-semibold">R$ {div.value.toFixed(2)}</td>
+                          <td className="py-3 px-3 font-body">{new Date(div.dataCom).toLocaleDateString('pt-BR')}</td>
+                          <td className="py-3 px-3 font-body">{new Date(div.dataPayment).toLocaleDateString('pt-BR')}</td>
+                          <td className="py-3 px-3 font-body text-success font-bold">{div.yieldPercent.toFixed(2)}%</td>
+                        </motion.tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

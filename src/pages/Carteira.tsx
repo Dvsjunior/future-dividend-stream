@@ -5,8 +5,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-import { fundosImobiliarios } from "@/data/mockData";
+import { fundosImobiliarios, topAltas, topBaixas } from "@/data/mockData";
 import { taxaJuros } from "@/data/economicData";
+import HelpTip from "@/components/HelpTip";
+
+/** Lookup automático de dados de mercado por ticker. */
+function lookupAtivo(ticker: string): {
+  tipo: Ativo["tipo"];
+  precoAtual: number;
+  dividendYield: number;
+  precoMedioSugerido?: number;
+} | null {
+  const t = ticker.trim().toUpperCase();
+  if (!t) return null;
+  const fii = fundosImobiliarios.find(f => f.ticker === t);
+  if (fii) {
+    return {
+      tipo: "FII",
+      precoAtual: fii.price,
+      dividendYield: fii.dividendYield,
+      precoMedioSugerido: fii.min52w,
+    };
+  }
+  const acao = [...topAltas, ...topBaixas].find(s => s.ticker === t);
+  if (acao) {
+    return { tipo: "Ação", precoAtual: acao.price, dividendYield: 0 };
+  }
+  return null;
+}
 
 interface Ativo {
   id: string;
@@ -108,6 +134,23 @@ const Carteira = () => {
 
   // Persist on every change
   useEffect(() => { saveAtivos(ativos); }, [ativos]);
+
+  // Auto-preenchimento ao alterar ticker
+  const handleTickerChange = (value: string) => {
+    setForm(f => ({ ...f, ticker: value }));
+    const info = lookupAtivo(value);
+    if (info) {
+      setForm(f => ({
+        ...f,
+        ticker: value,
+        tipo: info.tipo,
+        precoAtual: String(info.precoAtual),
+        dividendYield: String(info.dividendYield),
+        // sugere preço médio com mínima 52sem se ainda vazio
+        precoMedio: f.precoMedio || (info.precoMedioSugerido ? String(info.precoMedioSugerido) : ""),
+      }));
+    }
+  };
 
   const resetForm = () => {
     setForm({ ticker: "", tipo: "FII", quantidade: "", precoMedio: "", precoAtual: "", dividendYield: "" });
@@ -247,24 +290,60 @@ const Carteira = () => {
       <AnimatePresence>
         {showForm && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="glass rounded-xl p-5 border border-primary/20 overflow-hidden">
-            <h3 className="font-display text-sm font-bold text-primary mb-4">{editId ? "EDITAR ATIVO" : "NOVO ATIVO"}</h3>
+            <h3 className="font-display text-sm font-bold text-primary mb-2 flex items-center gap-2">
+              {editId ? "EDITAR ATIVO" : "NOVO ATIVO"}
+              <HelpTip text="Digite o ticker (ex: MXRF11). Tipo, preço atual e DY são preenchidos automaticamente. Você só precisa informar Quantidade e Preço Médio." />
+            </h3>
+            <p className="font-body text-xs text-muted-foreground mb-3">
+              💡 Sugestão de Preço Médio: utilize o <strong>mínimo das últimas 52 semanas</strong> quando disponível.
+            </p>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              <Input placeholder="Ticker (ex: MXRF11)" value={form.ticker} onChange={e => setForm(f => ({ ...f, ticker: e.target.value }))} className="font-body bg-secondary/50" />
-              <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v as Ativo["tipo"] }))}>
-                <SelectTrigger className="font-body bg-secondary/50"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="FII">FII</SelectItem>
-                  <SelectItem value="Ação">Ação</SelectItem>
-                  <SelectItem value="ETF">ETF</SelectItem>
-                  <SelectItem value="Renda Fixa">Renda Fixa</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input placeholder="Quantidade" type="number" value={form.quantidade} onChange={e => setForm(f => ({ ...f, quantidade: e.target.value }))} className="font-body bg-secondary/50" />
-              <Input placeholder="Preço Médio (R$)" type="number" step="0.01" value={form.precoMedio} onChange={e => setForm(f => ({ ...f, precoMedio: e.target.value }))} className="font-body bg-secondary/50" />
-              <Input placeholder="Preço Atual (R$)" type="number" step="0.01" value={form.precoAtual} onChange={e => setForm(f => ({ ...f, precoAtual: e.target.value }))} className="font-body bg-secondary/50" />
-              <Input placeholder="DY Anual (%)" type="number" step="0.01" value={form.dividendYield} onChange={e => setForm(f => ({ ...f, dividendYield: e.target.value }))} className="font-body bg-secondary/50" />
+              <div>
+                <label className="font-body text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                  Ticker <HelpTip text="Código de negociação do ativo na B3 (ex: MXRF11, PETR4)." />
+                </label>
+                <Input placeholder="ex: MXRF11" value={form.ticker} onChange={e => handleTickerChange(e.target.value)} className="font-body bg-secondary/50" />
+              </div>
+              <div>
+                <label className="font-body text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                  Tipo <HelpTip text="Detectado automaticamente pelo ticker." />
+                </label>
+                <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v as Ativo["tipo"] }))}>
+                  <SelectTrigger className="font-body bg-secondary/50"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="FII">FII</SelectItem>
+                    <SelectItem value="Ação">Ação</SelectItem>
+                    <SelectItem value="ETF">ETF</SelectItem>
+                    <SelectItem value="Renda Fixa">Renda Fixa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="font-body text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                  Quantidade <HelpTip text="Número de cotas/ações que você possui." />
+                </label>
+                <Input placeholder="ex: 100" type="number" value={form.quantidade} onChange={e => setForm(f => ({ ...f, quantidade: e.target.value }))} className="font-body bg-secondary/50" />
+              </div>
+              <div>
+                <label className="font-body text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                  Preço Médio (R$) <HelpTip text="Quanto você pagou em média por cota. Sugestão: use o mínimo das últimas 52 semanas." />
+                </label>
+                <Input placeholder="R$" type="number" step="0.01" value={form.precoMedio} onChange={e => setForm(f => ({ ...f, precoMedio: e.target.value }))} className="font-body bg-secondary/50" />
+              </div>
+              <div>
+                <label className="font-body text-xs text-primary/80 flex items-center gap-1 mb-1">
+                  Preço Atual ⚡ <HelpTip text="Cotação atual carregada automaticamente. Você pode ajustar manualmente se necessário." />
+                </label>
+                <Input placeholder="auto" type="number" step="0.01" value={form.precoAtual} onChange={e => setForm(f => ({ ...f, precoAtual: e.target.value }))} className="font-body bg-secondary/30 border-primary/30" />
+              </div>
+              <div>
+                <label className="font-body text-xs text-primary/80 flex items-center gap-1 mb-1">
+                  DY Anual (%) ⚡ <HelpTip text="Dividend Yield anual carregado automaticamente." />
+                </label>
+                <Input placeholder="auto" type="number" step="0.01" value={form.dividendYield} onChange={e => setForm(f => ({ ...f, dividendYield: e.target.value }))} className="font-body bg-secondary/30 border-primary/30" />
+              </div>
             </div>
-            <Button onClick={handleSubmit} className="mt-3 font-display text-xs">{editId ? "SALVAR ALTERAÇÕES" : "ADICIONAR"}</Button>
+            <Button onClick={handleSubmit} className="mt-4 font-display text-xs">{editId ? "SALVAR ALTERAÇÕES" : "ADICIONAR"}</Button>
           </motion.div>
         )}
       </AnimatePresence>
