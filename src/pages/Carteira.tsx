@@ -135,6 +135,23 @@ const Carteira = () => {
   // Persist on every change
   useEffect(() => { saveAtivos(ativos); }, [ativos]);
 
+  // Auto-preenchimento ao alterar ticker
+  const handleTickerChange = (value: string) => {
+    setForm(f => ({ ...f, ticker: value }));
+    const info = lookupAtivo(value);
+    if (info) {
+      setForm(f => ({
+        ...f,
+        ticker: value,
+        tipo: info.tipo,
+        precoAtual: String(info.precoAtual),
+        dividendYield: String(info.dividendYield),
+        // sugere preço médio com mínima 52sem se ainda vazio
+        precoMedio: f.precoMedio || (info.precoMedioSugerido ? String(info.precoMedioSugerido) : ""),
+      }));
+    }
+  };
+
   const resetForm = () => {
     setForm({ ticker: "", tipo: "FII", quantidade: "", precoMedio: "", precoAtual: "", dividendYield: "" });
     setEditId(null);
