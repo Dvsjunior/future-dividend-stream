@@ -16,7 +16,9 @@ interface Estrategia {
   subtitulo: string;
   descricao: string;
   icone: typeof Calendar;
-  cor: string;
+  borderClass: string;
+  iconClass: string;
+  titleClass: string;
   alocacoes: AlocacaoItem[];
 }
 
@@ -92,7 +94,9 @@ const DataCom = () => {
         subtitulo: "Receber dividendo o quanto antes",
         descricao: `Compra agora ${maisProx.ticker} para garantir o próximo pagamento em ${new Date(maisProx.dataPayment).toLocaleDateString("pt-BR")}.`,
         icone: Calendar,
-        cor: "primary",
+        borderClass: "border-primary/30",
+        iconClass: "text-primary",
+        titleClass: "text-primary",
         alocacoes: [alocarUmFundo(maisProx, valorInicial)],
       },
       {
@@ -100,7 +104,9 @@ const DataCom = () => {
         subtitulo: "Maximizar dividendo absoluto",
         descricao: `${melhorRetorno.fundo.ticker} oferece o maior dividendo total para o valor simulado, combinando preço da cota e DY.`,
         icone: TrendingUp,
-        cor: "success",
+        borderClass: "border-success/30",
+        iconClass: "text-success",
+        titleClass: "text-success",
         alocacoes: [melhorRetorno],
       },
       {
@@ -108,7 +114,9 @@ const DataCom = () => {
         subtitulo: "Receber dividendos em datas diferentes",
         descricao: "Mescla 3 FIIs com datas de pagamento distintas para criar fluxo de caixa quase mensal e reduzir risco.",
         icone: Layers,
-        cor: "accent",
+        borderClass: "border-accent/30",
+        iconClass: "text-accent",
+        titleClass: "text-accent",
         alocacoes: alocarMisto(escolhidos, valorInicial),
       },
     ];
@@ -219,11 +227,11 @@ const DataCom = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className={`glass rounded-xl p-5 border border-${est.cor}/30 flex flex-col`}
+              className={`glass rounded-xl p-5 border ${est.borderClass} flex flex-col`}
             >
               <div className="flex items-center gap-2 mb-3">
-                <Icon className={`w-5 h-5 text-${est.cor}`} />
-                <h3 className={`font-display text-sm font-bold text-${est.cor}`}>{est.titulo}</h3>
+                <Icon className={`w-5 h-5 ${est.iconClass}`} />
+                <h3 className={`font-display text-sm font-bold ${est.titleClass}`}>{est.titulo}</h3>
               </div>
               <p className="font-body text-sm text-foreground font-semibold mb-1">{est.subtitulo}</p>
               <p className="font-body text-xs text-muted-foreground mb-4">{est.descricao}</p>
