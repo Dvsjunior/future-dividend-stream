@@ -17,6 +17,8 @@ export interface FundoImobiliario {
   dataPayment: string;
   pvp: number;
   sector: string;
+  min52w?: number;
+  max52w?: number;
 }
 
 export interface Dividend {
