@@ -103,6 +103,45 @@ const BilhetePremiado = () => {
     };
   }, [indicados]);
 
+  // Relatório comparativo: Indicações (Ativos Analisados) vs Carteira em vigor
+  const comparativo = useMemo(() => {
+    const valorCarteira = carteira.reduce((s, a) => s + a.precoAtual * a.quantidade, 0);
+    const dyMedioCarteira = valorCarteira > 0
+      ? carteira.reduce((s, a) => s + a.dividendYield * a.precoAtual * a.quantidade, 0) / valorCarteira
+      : 0;
+    const rendaCarteiraAnual = (dyMedioCarteira / 100) * valorCarteira;
+
+    const dyMedioIndicado = indicados.length > 0
+      ? indicados.reduce((s, i) => s + i.dividendYield * i.precoAtual, 0) /
+        indicados.reduce((s, i) => s + i.precoAtual, 0)
+      : 0;
+    // Renda projetada caso o mesmo capital da carteira fosse alocado nas indicações
+    const rendaIndicadaAnual = (dyMedioIndicado / 100) * valorCarteira;
+
+    const diffValor = rendaIndicadaAnual - rendaCarteiraAnual;
+    const diffPct = rendaCarteiraAnual > 0 ? (diffValor / rendaCarteiraAnual) * 100 : 0;
+
+    // Comparativo por ativo: ticker em comum entre indicados e carteira
+    const porAtivo = indicados.map(i => {
+      const naCarteira = carteira.find(c => c.ticker === i.ticker);
+      return {
+        ticker: i.ticker,
+        dyIndicado: i.dividendYield,
+        dyCarteira: naCarteira?.dividendYield ?? null,
+        precoIndicado: i.precoIndicado,
+        precoMedio: naCarteira?.precoMedio ?? null,
+        precoAtual: i.precoAtual,
+        quantidade: naCarteira?.quantidade ?? 0,
+        ganhoUnit: naCarteira ? i.precoAtual - naCarteira.precoMedio : null,
+        ganhoTotal: naCarteira ? (i.precoAtual - naCarteira.precoMedio) * naCarteira.quantidade : null,
+      };
+    });
+
+    return { valorCarteira, dyMedioCarteira, dyMedioIndicado, rendaCarteiraAnual, rendaIndicadaAnual, diffValor, diffPct, porAtivo };
+  }, [indicados, carteira]);
+
+  const handleRecarregarCarteira = () => setCarteira(loadCarteira());
+
   return (
     <div className="space-y-6">
       <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="font-display text-3xl font-bold text-gradient">
