@@ -52,6 +52,7 @@ function saveIndicados(list: Indicado[]) {
 
 const BilhetePremiado = () => {
   const [indicados, setIndicados] = useState<Indicado[]>(loadIndicados);
+  const [carteira, setCarteira] = useState<AtivoCarteira[]>(loadCarteira);
   const [form, setForm] = useState({ ticker: "", origem: "Manual" });
 
   useEffect(() => saveIndicados(indicados), [indicados]);
