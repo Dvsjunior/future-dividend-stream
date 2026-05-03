@@ -1,10 +1,30 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Ticket, TrendingUp, TrendingDown } from "lucide-react";
+import { Ticket, TrendingUp, TrendingDown, BarChart3, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fundosImobiliarios } from "@/data/mockData";
 import HelpTip from "@/components/HelpTip";
+
+interface AtivoCarteira {
+  id: string;
+  ticker: string;
+  tipo: string;
+  quantidade: number;
+  precoMedio: number;
+  precoAtual: number;
+  dividendYield: number;
+}
+
+const CARTEIRA_KEY = "investidor-automatico-carteira";
+
+function loadCarteira(): AtivoCarteira[] {
+  try {
+    const raw = localStorage.getItem(CARTEIRA_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [];
+}
 
 interface Indicado {
   id: string;
