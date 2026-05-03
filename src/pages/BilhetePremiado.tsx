@@ -244,6 +244,100 @@ const BilhetePremiado = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Relatório Comparativo: Indicações x Carteira */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass rounded-xl p-6 border border-primary/30">
+        <div className="flex items-center gap-2 mb-2">
+          <BarChart3 className="w-5 h-5 text-primary" />
+          <h2 className="font-display text-lg font-bold text-foreground">RELATÓRIO: INDICADOS vs CARTEIRA</h2>
+          <HelpTip text="Compara o rendimento (DY) médio dos ativos analisados/indicados com o da sua carteira atual. A renda projetada considera o mesmo capital aplicado da sua carteira." />
+          <Button size="sm" variant="outline" onClick={handleRecarregarCarteira} className="ml-auto font-display text-xs">
+            RECARREGAR CARTEIRA
+          </Button>
+        </div>
+        <p className="font-body text-sm text-muted-foreground mb-4">
+          Capital base usado na simulação: <strong>R$ {comparativo.valorCarteira.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong> (valor atual da sua carteira).
+        </p>
+
+        {carteira.length === 0 || indicados.length === 0 ? (
+          <p className="font-body text-sm text-muted-foreground text-center py-6">
+            {carteira.length === 0 ? "Cadastre ativos em MINHA CARTEIRA " : ""}
+            {indicados.length === 0 ? "e registre indicações acima " : ""}
+            para ver o comparativo.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+              <div className="bg-secondary/50 rounded-lg p-3">
+                <p className="text-xs font-body text-muted-foreground">DY Médio Carteira</p>
+                <p className="font-display font-bold text-foreground">{comparativo.dyMedioCarteira.toFixed(2)}%</p>
+              </div>
+              <div className="bg-secondary/50 rounded-lg p-3">
+                <p className="text-xs font-body text-muted-foreground">DY Médio Indicações</p>
+                <p className="font-display font-bold text-primary">{comparativo.dyMedioIndicado.toFixed(2)}%</p>
+              </div>
+              <div className="bg-secondary/50 rounded-lg p-3">
+                <p className="text-xs font-body text-muted-foreground">Renda Anual Atual</p>
+                <p className="font-display font-bold text-foreground">R$ {comparativo.rendaCarteiraAnual.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div className="bg-secondary/50 rounded-lg p-3">
+                <p className="text-xs font-body text-muted-foreground">Renda Anual Indicada</p>
+                <p className="font-display font-bold text-primary">R$ {comparativo.rendaIndicadaAnual.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              </div>
+            </div>
+
+            <div className={`rounded-lg p-4 border mb-5 ${comparativo.diffValor >= 0 ? "bg-success/5 border-success/30" : "bg-destructive/5 border-destructive/30"}`}>
+              <div className="flex items-center gap-2">
+                <ArrowRightLeft className={`w-4 h-4 ${comparativo.diffValor >= 0 ? "text-success" : "text-destructive"}`} />
+                <span className="font-display text-sm font-bold text-foreground">DIFERENÇA PROJETADA (ano)</span>
+                <span className={`ml-auto font-display text-base font-bold ${comparativo.diffValor >= 0 ? "text-success" : "text-destructive"}`}>
+                  {comparativo.diffValor >= 0 ? "+" : ""}R$ {comparativo.diffValor.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({comparativo.diffPct >= 0 ? "+" : ""}{comparativo.diffPct.toFixed(2)}%)
+                </span>
+              </div>
+              <p className="text-xs font-body text-muted-foreground mt-1">
+                {comparativo.diffValor >= 0
+                  ? "As indicações renderiam mais que sua carteira atual no mesmo capital."
+                  : "Sua carteira atual rende mais que as indicações no mesmo capital."}
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <h3 className="font-display text-sm font-bold text-foreground mb-2">📌 Comparativo por Ativo</h3>
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2 font-display text-xs text-muted-foreground">TICKER</th>
+                    <th className="text-left py-2 px-2 font-display text-xs text-muted-foreground">DY INDIC.</th>
+                    <th className="text-left py-2 px-2 font-display text-xs text-muted-foreground">DY CARTEIRA</th>
+                    <th className="text-left py-2 px-2 font-display text-xs text-muted-foreground">PM CARTEIRA</th>
+                    <th className="text-left py-2 px-2 font-display text-xs text-muted-foreground">PREÇO ATUAL</th>
+                    <th className="text-left py-2 px-2 font-display text-xs text-muted-foreground">GANHO/PERDA</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparativo.porAtivo.map(p => (
+                    <tr key={p.ticker} className="border-b border-border/50 hover:bg-secondary/30">
+                      <td className="py-2 px-2 font-body font-bold text-primary">{p.ticker}</td>
+                      <td className="py-2 px-2 font-body text-success">{p.dyIndicado.toFixed(2)}%</td>
+                      <td className="py-2 px-2 font-body">{p.dyCarteira !== null ? `${p.dyCarteira.toFixed(2)}%` : <span className="text-muted-foreground text-xs">não está na carteira</span>}</td>
+                      <td className="py-2 px-2 font-body">{p.precoMedio !== null ? `R$ ${p.precoMedio.toFixed(2)}` : "—"}</td>
+                      <td className="py-2 px-2 font-body">R$ {p.precoAtual.toFixed(2)}</td>
+                      <td className={`py-2 px-2 font-body font-bold ${(p.ganhoTotal ?? 0) >= 0 ? "text-success" : "text-destructive"}`}>
+                        {p.ganhoTotal !== null ? (
+                          <div className="flex items-center gap-1">
+                            {p.ganhoTotal >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                            R$ {p.ganhoTotal.toFixed(2)} ({((p.ganhoUnit! / p.precoMedio!) * 100).toFixed(2)}%)
+                          </div>
+                        ) : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </motion.div>
     </div>
   );
 };
