@@ -95,6 +95,19 @@ const Economia = () => {
                   </div>
                 </div>
                 <p className="text-muted-foreground text-sm font-body leading-relaxed">{t.description}</p>
+                {t.ativosRelacionados && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="font-display text-[10px] text-muted-foreground mb-1.5">📌 ATIVOS RELACIONADOS</p>
+                    <div className="space-y-1">
+                      {t.ativosRelacionados.map(a => (
+                        <div key={a.ticker} className="flex items-start gap-2 text-xs">
+                          <span className="font-body font-bold text-primary min-w-[60px]">{a.ticker}</span>
+                          <span className="font-body text-muted-foreground">{a.motivo}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
