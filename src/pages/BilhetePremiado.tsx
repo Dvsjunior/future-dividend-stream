@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Ticket, TrendingUp, TrendingDown, BarChart3, ArrowRightLeft } from "lucide-react";
+import { Ticket, TrendingUp, TrendingDown, BarChart3, ArrowRightLeft, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fundosImobiliarios } from "@/data/mockData";
+import { fundosImobiliarios, dividendos } from "@/data/mockData";
 import HelpTip from "@/components/HelpTip";
 
 interface AtivoCarteira {
@@ -139,6 +139,48 @@ const BilhetePremiado = () => {
 
     return { valorCarteira, dyMedioCarteira, dyMedioIndicado, rendaCarteiraAnual, rendaIndicadaAnual, diffValor, diffPct, porAtivo };
   }, [indicados, carteira]);
+
+  // Projeções de dividendos com base nas datas reais (mockData.dividendos) cruzadas com a carteira
+  const projecoes = useMemo(() => {
+    const hoje = new Date();
+    const em90Dias = new Date(hoje); em90Dias.setDate(em90Dias.getDate() + 90);
+
+    // eventos = pagamentos futuros (até 90 dias) dos ativos que estão na minha carteira
+    const eventos = dividendos
+      .map(d => {
+        const naCarteira = carteira.find(c => c.ticker === d.ticker);
+        if (!naCarteira) return null;
+        const dataPg = new Date(d.dataPayment);
+        if (dataPg < hoje || dataPg > em90Dias) return null;
+        const valorTotal = d.value * naCarteira.quantidade;
+        return { ticker: d.ticker, dataPayment: d.dataPayment, valorUnit: d.value, qtd: naCarteira.quantidade, valorTotal, type: d.type };
+      })
+      .filter(Boolean) as { ticker: string; dataPayment: string; valorUnit: number; qtd: number; valorTotal: number; type: string }[];
+
+    eventos.sort((a, b) => new Date(a.dataPayment).getTime() - new Date(b.dataPayment).getTime());
+
+    // Agrupado por mês
+    const porMes: Record<string, { mes: string; total: number; eventos: typeof eventos }> = {};
+    eventos.forEach(ev => {
+      const dt = new Date(ev.dataPayment);
+      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+      const label = dt.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      if (!porMes[key]) porMes[key] = { mes: label, total: 0, eventos: [] };
+      porMes[key].total += ev.valorTotal;
+      porMes[key].eventos.push(ev);
+    });
+    const mensais = Object.entries(porMes).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
+
+    const totalProjetado = eventos.reduce((s, e) => s + e.valorTotal, 0);
+    // Janela de dias entre primeiro e último evento (mínimo 30 para não distorcer)
+    const dias = eventos.length > 1
+      ? Math.max(30, (new Date(eventos[eventos.length - 1].dataPayment).getTime() - new Date(eventos[0].dataPayment).getTime()) / 86400000)
+      : 30;
+    const mediaDiaria = totalProjetado / dias;
+    const mediaMensal = mensais.length > 0 ? totalProjetado / mensais.length : 0;
+
+    return { eventos, mensais, totalProjetado, mediaDiaria, mediaMensal };
+  }, [carteira]);
 
   const handleRecarregarCarteira = () => setCarteira(loadCarteira());
 
@@ -330,6 +372,86 @@ const BilhetePremiado = () => {
                           </div>
                         ) : "—"}
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </motion.div>
+
+      {/* Projeções de dividendos da minha carteira */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass rounded-xl p-6 border border-primary/30">
+        <div className="flex items-center gap-2 mb-2">
+          <CalendarDays className="w-5 h-5 text-primary" />
+          <h2 className="font-display text-lg font-bold text-foreground">PROJEÇÃO DE DIVIDENDOS — CARTEIRA</h2>
+          <HelpTip text="Cruza os pagamentos previstos (data de pagamento) dos ativos da sua carteira com a quantidade que você possui. Mostra valor total, média mensal e estimativa diária na janela projetada (próximos 90 dias)." />
+        </div>
+        <p className="font-body text-sm text-muted-foreground mb-4">
+          Eventos previstos nos próximos 90 dias com base nas datas de pagamento e na quantidade de cotas que você tem.
+        </p>
+
+        {projecoes.eventos.length === 0 ? (
+          <p className="font-body text-sm text-muted-foreground text-center py-6">
+            Sem eventos no horizonte. Cadastre ativos em MINHA CARTEIRA cujo pagamento esteja nos próximos 90 dias.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-5">
+              <div className="bg-secondary/50 rounded-lg p-3">
+                <p className="text-xs font-body text-muted-foreground">Total projetado (90 dias)</p>
+                <p className="font-display font-bold text-success">R$ {projecoes.totalProjetado.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div className="bg-secondary/50 rounded-lg p-3">
+                <p className="text-xs font-body text-muted-foreground flex items-center gap-1">
+                  Média mensal <HelpTip text="Total projetado dividido pelo número de meses com eventos." />
+                </p>
+                <p className="font-display font-bold text-primary">R$ {projecoes.mediaMensal.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              </div>
+              <div className="bg-secondary/50 rounded-lg p-3">
+                <p className="text-xs font-body text-muted-foreground flex items-center gap-1">
+                  Estimativa diária <HelpTip text="Total projetado dividido pela janela em dias entre o primeiro e o último pagamento." />
+                </p>
+                <p className="font-display font-bold text-foreground">R$ {projecoes.mediaDiaria.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+              </div>
+            </div>
+
+            {/* Por mês */}
+            <h3 className="font-display text-sm font-bold text-foreground mb-2">📅 PROJEÇÃO MENSAL</h3>
+            <div className="grid md:grid-cols-3 gap-3 mb-5">
+              {projecoes.mensais.map(m => (
+                <div key={m.mes} className="rounded-lg p-3 border border-border bg-secondary/30">
+                  <p className="font-display text-xs text-primary capitalize">{m.mes}</p>
+                  <p className="font-display text-lg font-bold text-success">R$ {m.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</p>
+                  <p className="text-[10px] font-body text-muted-foreground">{m.eventos.length} pagamento(s)</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Eventos detalhados */}
+            <h3 className="font-display text-sm font-bold text-foreground mb-2">🗓️ EVENTOS PREVISTOS</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2 font-display text-xs text-muted-foreground">DATA PAG.</th>
+                    <th className="text-left py-2 px-2 font-display text-xs text-muted-foreground">TICKER</th>
+                    <th className="text-left py-2 px-2 font-display text-xs text-muted-foreground">TIPO</th>
+                    <th className="text-right py-2 px-2 font-display text-xs text-muted-foreground">VALOR/COTA</th>
+                    <th className="text-right py-2 px-2 font-display text-xs text-muted-foreground">QTD</th>
+                    <th className="text-right py-2 px-2 font-display text-xs text-muted-foreground">TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projecoes.eventos.map((e, i) => (
+                    <tr key={i} className="border-b border-border/50 hover:bg-secondary/30">
+                      <td className="py-2 px-2 font-body text-xs">{new Date(e.dataPayment).toLocaleDateString("pt-BR")}</td>
+                      <td className="py-2 px-2 font-body font-bold text-primary">{e.ticker}</td>
+                      <td className="py-2 px-2 font-body text-xs text-muted-foreground">{e.type}</td>
+                      <td className="py-2 px-2 font-body text-right">R$ {e.valorUnit.toFixed(2)}</td>
+                      <td className="py-2 px-2 font-body text-right">{e.qtd}</td>
+                      <td className="py-2 px-2 font-body text-right font-bold text-success">R$ {e.valorTotal.toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, Globe, AlertTriangle, CheckCircle, Info } from "lucide-react";
-import { taxaJuros, moedas, historicoTaxas, impactAnalyses } from "@/data/economicData";
+import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, Globe, AlertTriangle, CheckCircle, Info, LineChart as LineIcon } from "lucide-react";
+import { taxaJuros, moedas, historicoTaxas, impactAnalyses, futuros } from "@/data/economicData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
@@ -31,6 +31,9 @@ const Economia = () => {
           </TabsTrigger>
           <TabsTrigger value="historico" className="font-display text-xs data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
             <TrendingUp className="w-4 h-4 mr-1" /> HISTÓRICO
+          </TabsTrigger>
+          <TabsTrigger value="futuros" className="font-display text-xs data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
+            <LineIcon className="w-4 h-4 mr-1" /> FUTUROS
           </TabsTrigger>
           <TabsTrigger value="impactos" className="font-display text-xs data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
             <Globe className="w-4 h-4 mr-1" /> IMPACTOS
@@ -92,6 +95,19 @@ const Economia = () => {
                   </div>
                 </div>
                 <p className="text-muted-foreground text-sm font-body leading-relaxed">{t.description}</p>
+                {t.ativosRelacionados && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="font-display text-[10px] text-muted-foreground mb-1.5">📌 ATIVOS RELACIONADOS</p>
+                    <div className="space-y-1">
+                      {t.ativosRelacionados.map(a => (
+                        <div key={a.ticker} className="flex items-start gap-2 text-xs">
+                          <span className="font-body font-bold text-primary min-w-[60px]">{a.ticker}</span>
+                          <span className="font-body text-muted-foreground">{a.motivo}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
@@ -142,6 +158,19 @@ const Economia = () => {
                     {m.impact}
                   </p>
                 </div>
+                {m.ativosRelacionados && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="font-display text-[10px] text-muted-foreground mb-1.5">📌 ATIVOS RELACIONADOS</p>
+                    <div className="space-y-1">
+                      {m.ativosRelacionados.map(a => (
+                        <div key={a.ticker} className="flex items-start gap-2 text-xs">
+                          <span className="font-body font-bold text-primary min-w-[60px]">{a.ticker}</span>
+                          <span className="font-body text-muted-foreground">{a.motivo}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
@@ -219,6 +248,68 @@ const Economia = () => {
           </motion.div>
         </TabsContent>
 
+        {/* FUTUROS */}
+        <TabsContent value="futuros">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-6 border border-primary/20 mb-4">
+            <h2 className="font-display text-lg font-bold text-foreground mb-2">📉 CONTRATOS FUTUROS</h2>
+            <p className="font-body text-sm text-muted-foreground">
+              Compare o preço à vista (spot) com o futuro (mini dólar, dólar cheio, BTC perpétuo, DI futuro, mini índice). O <strong>basis</strong> (diferença futuro − spot) revela a expectativa do mercado.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {futuros.map((f, i) => {
+              const isCripto = f.code.includes("BTC");
+              const isTaxa = f.code.startsWith("DI");
+              const fmt = (v: number) =>
+                isTaxa ? `${v.toFixed(2)}%` :
+                isCripto ? `R$ ${v.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}` :
+                v >= 1000 ? v.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) :
+                `R$ ${v.toFixed(2)}`;
+              return (
+                <motion.div
+                  key={f.code}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="glass rounded-xl p-5 border border-border hover:border-primary/30 transition-all"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="font-display text-xs text-primary">{f.code}</p>
+                      <h3 className="font-display text-lg font-bold text-foreground">{f.name}</h3>
+                    </div>
+                    <span className="text-xs font-body text-muted-foreground bg-secondary px-2 py-1 rounded-md">
+                      Venc: {f.vencimento}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="bg-secondary/50 rounded-lg p-2">
+                      <p className="text-[10px] font-body text-muted-foreground">SPOT</p>
+                      <p className="font-display font-bold text-foreground text-sm">{fmt(f.spotPrice)}</p>
+                    </div>
+                    <div className="bg-secondary/50 rounded-lg p-2">
+                      <p className="text-[10px] font-body text-muted-foreground">FUTURO</p>
+                      <p className="font-display font-bold text-primary text-sm">{fmt(f.futurePrice)}</p>
+                    </div>
+                    <div className={`rounded-lg p-2 ${f.basis >= 0 ? "bg-success/10" : "bg-destructive/10"}`}>
+                      <p className="text-[10px] font-body text-muted-foreground">BASIS</p>
+                      <p className={`font-display font-bold text-sm ${f.basis >= 0 ? "text-success" : "text-destructive"}`}>
+                        {f.basis >= 0 ? "+" : ""}{f.basisPct.toFixed(2)}%
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs font-body text-muted-foreground leading-relaxed mb-2">{f.description}</p>
+                  <div className="border-t border-border pt-2">
+                    <p className="font-display text-[10px] text-primary mb-1">🔍 LEITURA DE MERCADO</p>
+                    <p className="text-xs font-body text-foreground leading-relaxed">{f.interpretation}</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </TabsContent>
+
         {/* IMPACTOS */}
         <TabsContent value="impactos">
           <div className="space-y-4">
@@ -252,6 +343,25 @@ const Economia = () => {
                     ))}
                   </ul>
                 </div>
+
+                {analysis.ativosImpactados && (
+                  <div className="mb-4">
+                    <p className="font-display text-xs text-muted-foreground mb-2">📌 ATIVOS IMPACTADOS</p>
+                    <div className="grid md:grid-cols-2 gap-2">
+                      {analysis.ativosImpactados.map(a => (
+                        <div key={a.ticker} className="flex items-start gap-2 bg-secondary/40 rounded-md p-2">
+                          {a.direcao === "alta"
+                            ? <TrendingUp className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
+                            : <TrendingDown className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />}
+                          <div className="flex-1">
+                            <span className="font-body font-bold text-primary text-sm">{a.ticker}</span>
+                            <p className="text-xs font-body text-muted-foreground">{a.motivo}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="border-t border-border pt-4">
                   <p className="font-display text-xs text-primary mb-1">💡 RECOMENDAÇÃO</p>
