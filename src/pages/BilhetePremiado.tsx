@@ -140,6 +140,48 @@ const BilhetePremiado = () => {
     return { valorCarteira, dyMedioCarteira, dyMedioIndicado, rendaCarteiraAnual, rendaIndicadaAnual, diffValor, diffPct, porAtivo };
   }, [indicados, carteira]);
 
+  // Projeções de dividendos com base nas datas reais (mockData.dividendos) cruzadas com a carteira
+  const projecoes = useMemo(() => {
+    const hoje = new Date();
+    const em90Dias = new Date(hoje); em90Dias.setDate(em90Dias.getDate() + 90);
+
+    // eventos = pagamentos futuros (até 90 dias) dos ativos que estão na minha carteira
+    const eventos = dividendos
+      .map(d => {
+        const naCarteira = carteira.find(c => c.ticker === d.ticker);
+        if (!naCarteira) return null;
+        const dataPg = new Date(d.dataPayment);
+        if (dataPg < hoje || dataPg > em90Dias) return null;
+        const valorTotal = d.value * naCarteira.quantidade;
+        return { ticker: d.ticker, dataPayment: d.dataPayment, valorUnit: d.value, qtd: naCarteira.quantidade, valorTotal, type: d.type };
+      })
+      .filter(Boolean) as { ticker: string; dataPayment: string; valorUnit: number; qtd: number; valorTotal: number; type: string }[];
+
+    eventos.sort((a, b) => new Date(a.dataPayment).getTime() - new Date(b.dataPayment).getTime());
+
+    // Agrupado por mês
+    const porMes: Record<string, { mes: string; total: number; eventos: typeof eventos }> = {};
+    eventos.forEach(ev => {
+      const dt = new Date(ev.dataPayment);
+      const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
+      const label = dt.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+      if (!porMes[key]) porMes[key] = { mes: label, total: 0, eventos: [] };
+      porMes[key].total += ev.valorTotal;
+      porMes[key].eventos.push(ev);
+    });
+    const mensais = Object.entries(porMes).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v);
+
+    const totalProjetado = eventos.reduce((s, e) => s + e.valorTotal, 0);
+    // Janela de dias entre primeiro e último evento (mínimo 30 para não distorcer)
+    const dias = eventos.length > 1
+      ? Math.max(30, (new Date(eventos[eventos.length - 1].dataPayment).getTime() - new Date(eventos[0].dataPayment).getTime()) / 86400000)
+      : 30;
+    const mediaDiaria = totalProjetado / dias;
+    const mediaMensal = mensais.length > 0 ? totalProjetado / mensais.length : 0;
+
+    return { eventos, mensais, totalProjetado, mediaDiaria, mediaMensal };
+  }, [carteira]);
+
   const handleRecarregarCarteira = () => setCarteira(loadCarteira());
 
   return (
