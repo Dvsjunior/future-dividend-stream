@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Ticket, TrendingUp, TrendingDown, BarChart3, ArrowRightLeft } from "lucide-react";
+import { Ticket, TrendingUp, TrendingDown, BarChart3, ArrowRightLeft, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { fundosImobiliarios } from "@/data/mockData";
+import { fundosImobiliarios, dividendos } from "@/data/mockData";
 import HelpTip from "@/components/HelpTip";
 
 interface AtivoCarteira {
