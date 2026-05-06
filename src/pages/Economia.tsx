@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, Globe, AlertTriangle, CheckCircle, Info } from "lucide-react";
-import { taxaJuros, moedas, historicoTaxas, impactAnalyses } from "@/data/economicData";
+import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, Globe, AlertTriangle, CheckCircle, Info, LineChart as LineIcon } from "lucide-react";
+import { taxaJuros, moedas, historicoTaxas, impactAnalyses, futuros } from "@/data/economicData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
