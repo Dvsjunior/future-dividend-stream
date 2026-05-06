@@ -32,6 +32,9 @@ const Economia = () => {
           <TabsTrigger value="historico" className="font-display text-xs data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
             <TrendingUp className="w-4 h-4 mr-1" /> HISTÓRICO
           </TabsTrigger>
+          <TabsTrigger value="futuros" className="font-display text-xs data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
+            <LineIcon className="w-4 h-4 mr-1" /> FUTUROS
+          </TabsTrigger>
           <TabsTrigger value="impactos" className="font-display text-xs data-[state=active]:gradient-primary data-[state=active]:text-primary-foreground">
             <Globe className="w-4 h-4 mr-1" /> IMPACTOS
           </TabsTrigger>
