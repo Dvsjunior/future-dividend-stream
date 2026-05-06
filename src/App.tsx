@@ -12,7 +12,7 @@ import Valuation from "./pages/Valuation";
 import Economia from "./pages/Economia";
 import Carteira from "./pages/Carteira";
 import BilhetePremiado from "./pages/BilhetePremiado";
-import GestaoBanca from "./pages/GestaoBanca";
+import Elearning from "./pages/Elearning";
 import AppLayout from "./layouts/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -43,7 +43,7 @@ const App = () => {
                   <Route path="/economia" element={<Economia />} />
                   <Route path="/carteira" element={<Carteira />} />
                   <Route path="/bilhete-premiado" element={<BilhetePremiado />} />
-                  <Route path="/gestao-banca" element={<GestaoBanca />} />
+                  <Route path="/elearning" element={<Elearning />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </>
