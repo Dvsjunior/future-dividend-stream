@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Wallet, Calendar, Target, DollarSign } from "lucide-react";
 import DashboardCard from "@/components/DashboardCard";
 import EconomicWidget from "@/components/EconomicWidget";
+import DividendAlerts from "@/components/DividendAlerts";
 import {
   topAltas, topBaixas, fundosImobiliarios, carteira,
   encontrarProximoFundoParaCompra, calcularCotasParaAutoSustento
@@ -56,6 +57,9 @@ const Dashboard = () => {
 
       {/* Widget Econômico */}
       <EconomicWidget />
+
+      {/* Alertas de Dividendos da carteira */}
+      <DividendAlerts />
 
       {/* Análise de auto-sustento */}
       {proximoFundo && (

@@ -13,6 +13,7 @@ import Economia from "./pages/Economia";
 import Carteira from "./pages/Carteira";
 import BilhetePremiado from "./pages/BilhetePremiado";
 import Elearning from "./pages/Elearning";
+import Transparencia from "./pages/Transparencia";
 import AppLayout from "./layouts/AppLayout";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => {
                   <Route path="/carteira" element={<Carteira />} />
                   <Route path="/bilhete-premiado" element={<BilhetePremiado />} />
                   <Route path="/elearning" element={<Elearning />} />
+                  <Route path="/transparencia" element={<Transparencia />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </>
