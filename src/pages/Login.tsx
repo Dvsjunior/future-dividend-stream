@@ -9,16 +9,30 @@ interface LoginProps {
 }
 
 const Login = ({ onLogin }: LoginProps) => {
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!email || !password || (mode === "signup" && (!name || !confirm))) {
       setError("Preencha todos os campos");
       return;
+    }
+    if (mode === "signup" && password !== confirm) {
+      setError("As senhas não coincidem");
+      return;
+    }
+    if (mode === "signup") {
+      try {
+        const users = JSON.parse(localStorage.getItem("ia-users") || "[]");
+        users.push({ name, email });
+        localStorage.setItem("ia-users", JSON.stringify(users));
+      } catch {}
     }
     onLogin();
   };
