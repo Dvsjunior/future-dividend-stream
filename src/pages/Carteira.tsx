@@ -202,21 +202,27 @@ const Carteira = () => {
 
   const handleDelete = (id: string) => setAtivos(prev => prev.filter(a => a.id !== id));
 
-  const totalInvestido = ativos.reduce((s, a) => s + a.precoMedio * a.quantidade, 0);
-  const totalAtual = ativos.reduce((s, a) => s + a.precoAtual * a.quantidade, 0);
+  const totalInvestido = ativosLive.reduce((s, a) => s + a.precoMedio * a.quantidade, 0);
+  const totalAtual = ativosLive.reduce((s, a) => s + a.precoAtual * a.quantidade, 0);
   const lucroPrejuizo = totalAtual - totalInvestido;
   const lucroPct = totalInvestido > 0 ? (lucroPrejuizo / totalInvestido) * 100 : 0;
-  const recomendacoes = gerarRecomendacoes(ativos);
+  const recomendacoes = gerarRecomendacoes(ativosLive);
+
+  // Projeções
+  const rendaAnual = ativosLive.reduce((s, a) => s + (a.precoAtual * a.quantidade * a.dividendYield) / 100, 0);
+  const rendaMensal = rendaAnual / 12;
+  const rendaDiaria = rendaAnual / 365;
+  const dyMedio = totalAtual > 0 ? (rendaAnual / totalAtual) * 100 : 0;
 
   // Pie chart data: allocation by tipo
-  const alocacaoPorTipo = ativos.reduce<Record<string, number>>((acc, a) => {
+  const alocacaoPorTipo = ativosLive.reduce<Record<string, number>>((acc, a) => {
     acc[a.tipo] = (acc[a.tipo] || 0) + a.precoAtual * a.quantidade;
     return acc;
   }, {});
   const pieData = Object.entries(alocacaoPorTipo).map(([name, value]) => ({ name, value }));
 
   // Pie chart data: allocation by ticker (top assets)
-  const alocacaoPorTicker = ativos
+  const alocacaoPorTicker = ativosLive
     .map(a => ({ name: a.ticker, value: a.precoAtual * a.quantidade }))
     .sort((a, b) => b.value - a.value);
 
