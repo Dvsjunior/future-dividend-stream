@@ -132,9 +132,22 @@ const Carteira = () => {
   const [form, setForm] = useState({
     ticker: "", tipo: "FII" as Ativo["tipo"], quantidade: "", precoMedio: "", precoAtual: "", dividendYield: "",
   });
+  const { prices: livePrices, updatedAt: priceUpdatedAt } = useLivePrices();
 
   // Persist on every change
   useEffect(() => { saveAtivos(ativos); }, [ativos]);
+
+  // Sincroniza preço atual com feed live
+  const ativosLive = useMemo(() => ativos.map(a => {
+    const live = livePrices[a.ticker];
+    return live ? { ...a, precoAtual: live.spot } : a;
+  }), [ativos, livePrices]);
+
+  const updateQuantidade = (id: string, qtd: number) => {
+    if (qtd < 0 || isNaN(qtd)) return;
+    setAtivos(prev => prev.map(a => a.id === id ? { ...a, quantidade: qtd } : a));
+  };
+
 
   // Auto-preenchimento ao alterar ticker
   const handleTickerChange = (value: string) => {
