@@ -249,6 +249,35 @@ const Carteira = () => {
         ))}
       </div>
 
+      {/* Projeções de renda passiva */}
+      {ativosLive.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-xl p-6 border border-primary/30 glow-primary">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-5 h-5 text-primary animate-pulse" />
+            <h2 className="font-display text-lg font-bold text-foreground">⚡ PROJEÇÕES (TEMPO REAL)</h2>
+            <span className="ml-auto text-[10px] font-body text-muted-foreground">
+              atualizado {new Date(priceUpdatedAt).toLocaleTimeString("pt-BR")}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { l: "Renda Diária", v: rendaDiaria },
+              { l: "Renda Mensal", v: rendaMensal },
+              { l: "Renda Anual", v: rendaAnual },
+              { l: "DY Médio", v: dyMedio, pct: true },
+            ].map(c => (
+              <div key={c.l} className="p-4 rounded-lg bg-secondary/40 border border-border">
+                <p className="font-body text-xs text-muted-foreground">{c.l}</p>
+                <p className="font-display text-lg font-bold text-success">
+                  {c.pct ? `${c.v.toFixed(2)}%` : `R$ ${c.v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* Charts */}
       {ativos.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
