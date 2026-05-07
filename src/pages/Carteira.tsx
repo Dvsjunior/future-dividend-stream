@@ -398,9 +398,9 @@ const Carteira = () => {
       </AnimatePresence>
 
       {/* Tabela de ativos */}
-      {ativos.length > 0 && (
+      {ativosLive.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-6 border border-border">
-          <h2 className="font-display text-lg font-bold text-foreground mb-4">📋 ATIVOS EM CARTEIRA</h2>
+          <h2 className="font-display text-lg font-bold text-foreground mb-4">📋 ATIVOS EM CARTEIRA <span className="text-xs text-muted-foreground font-body">(qtd editável)</span></h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -411,13 +411,17 @@ const Carteira = () => {
                 </tr>
               </thead>
               <tbody>
-                {ativos.map(a => {
+                {ativosLive.map(a => {
                   const lucro = ((a.precoAtual - a.precoMedio) / a.precoMedio) * 100;
                   return (
                     <tr key={a.id} className="border-b border-border/50 hover:bg-secondary/30 transition-all">
                       <td className="py-3 px-2 font-body font-bold text-primary">{a.ticker}</td>
                       <td className="py-3 px-2 font-body"><span className="px-2 py-0.5 rounded text-xs font-display bg-primary/10 text-primary">{a.tipo}</span></td>
-                      <td className="py-3 px-2 font-body">{a.quantidade}</td>
+                      <td className="py-3 px-2 font-body">
+                        <Input type="number" min="0" value={a.quantidade}
+                          onChange={e => updateQuantidade(a.id, Number(e.target.value))}
+                          className="w-20 h-8 text-sm font-body bg-secondary/40 border-primary/20" />
+                      </td>
                       <td className="py-3 px-2 font-body">R$ {a.precoMedio.toFixed(2)}</td>
                       <td className="py-3 px-2 font-body">R$ {a.precoAtual.toFixed(2)}</td>
                       <td className="py-3 px-2 font-body text-success font-bold">{a.dividendYield.toFixed(1)}%</td>
