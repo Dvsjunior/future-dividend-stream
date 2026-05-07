@@ -9,16 +9,30 @@ interface LoginProps {
 }
 
 const Login = ({ onLogin }: LoginProps) => {
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!email || !password || (mode === "signup" && (!name || !confirm))) {
       setError("Preencha todos os campos");
       return;
+    }
+    if (mode === "signup" && password !== confirm) {
+      setError("As senhas não coincidem");
+      return;
+    }
+    if (mode === "signup") {
+      try {
+        const users = JSON.parse(localStorage.getItem("ia-users") || "[]");
+        users.push({ name, email });
+        localStorage.setItem("ia-users", JSON.stringify(users));
+      } catch {}
     }
     onLogin();
   };
@@ -56,6 +70,19 @@ const Login = ({ onLogin }: LoginProps) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {mode === "signup" && (
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Nome completo"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); setError(""); }}
+                  className="w-full pl-12 pr-4 py-3.5 bg-secondary rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary font-body text-lg transition-all"
+                />
+              </div>
+            )}
+
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <input
@@ -85,12 +112,21 @@ const Login = ({ onLogin }: LoginProps) => {
               </button>
             </div>
 
+            {mode === "signup" && (
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Confirmar senha"
+                  value={confirm}
+                  onChange={(e) => { setConfirm(e.target.value); setError(""); }}
+                  className="w-full pl-12 pr-4 py-3.5 bg-secondary rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary font-body text-lg transition-all"
+                />
+              </div>
+            )}
+
             {error && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-destructive text-sm font-body"
-              >
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-destructive text-sm font-body">
                 {error}
               </motion.p>
             )}
@@ -101,8 +137,16 @@ const Login = ({ onLogin }: LoginProps) => {
               whileTap={{ scale: 0.98 }}
               className="w-full py-3.5 gradient-primary rounded-xl font-display font-bold text-primary-foreground text-sm tracking-wider glow-primary transition-all"
             >
-              ENTRAR
+              {mode === "login" ? "ENTRAR" : "CRIAR CONTA"}
             </motion.button>
+
+            <button
+              type="button"
+              onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(""); }}
+              className="w-full text-sm font-body text-muted-foreground hover:text-primary transition-colors"
+            >
+              {mode === "login" ? "Não tem conta? Criar nova conta" : "Já tem conta? Entrar"}
+            </button>
           </form>
         </div>
       </motion.div>

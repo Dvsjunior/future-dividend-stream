@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Coins, CalendarCheck, Calculator, BarChart3, Briefcase, Ticket, GraduationCap, LogOut } from "lucide-react";
+import { LayoutDashboard, Coins, CalendarCheck, Calculator, BarChart3, Briefcase, Ticket, GraduationCap, ShieldCheck, LogOut } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
 
@@ -12,6 +12,7 @@ const navItems = [
   { to: "/carteira", icon: Briefcase, label: "Carteira" },
   { to: "/bilhete-premiado", icon: Ticket, label: "Bilhete Premiado" },
   { to: "/elearning", icon: GraduationCap, label: "E-Learning" },
+  { to: "/transparencia", icon: ShieldCheck, label: "Transparência" },
 ];
 
 interface AppSidebarProps {

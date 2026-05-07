@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, ArrowRightLeft, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Edit2 } from "lucide-react";
+import { Plus, Trash2, ArrowRightLeft, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Edit2, Activity } from "lucide-react";
+import { useLivePrices } from "@/hooks/useLivePrices";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -131,9 +132,22 @@ const Carteira = () => {
   const [form, setForm] = useState({
     ticker: "", tipo: "FII" as Ativo["tipo"], quantidade: "", precoMedio: "", precoAtual: "", dividendYield: "",
   });
+  const { prices: livePrices, updatedAt: priceUpdatedAt } = useLivePrices();
 
   // Persist on every change
   useEffect(() => { saveAtivos(ativos); }, [ativos]);
+
+  // Sincroniza preço atual com feed live
+  const ativosLive = useMemo(() => ativos.map(a => {
+    const live = livePrices[a.ticker];
+    return live ? { ...a, precoAtual: live.spot } : a;
+  }), [ativos, livePrices]);
+
+  const updateQuantidade = (id: string, qtd: number) => {
+    if (qtd < 0 || isNaN(qtd)) return;
+    setAtivos(prev => prev.map(a => a.id === id ? { ...a, quantidade: qtd } : a));
+  };
+
 
   // Auto-preenchimento ao alterar ticker
   const handleTickerChange = (value: string) => {
@@ -188,21 +202,27 @@ const Carteira = () => {
 
   const handleDelete = (id: string) => setAtivos(prev => prev.filter(a => a.id !== id));
 
-  const totalInvestido = ativos.reduce((s, a) => s + a.precoMedio * a.quantidade, 0);
-  const totalAtual = ativos.reduce((s, a) => s + a.precoAtual * a.quantidade, 0);
+  const totalInvestido = ativosLive.reduce((s, a) => s + a.precoMedio * a.quantidade, 0);
+  const totalAtual = ativosLive.reduce((s, a) => s + a.precoAtual * a.quantidade, 0);
   const lucroPrejuizo = totalAtual - totalInvestido;
   const lucroPct = totalInvestido > 0 ? (lucroPrejuizo / totalInvestido) * 100 : 0;
-  const recomendacoes = gerarRecomendacoes(ativos);
+  const recomendacoes = gerarRecomendacoes(ativosLive);
+
+  // Projeções
+  const rendaAnual = ativosLive.reduce((s, a) => s + (a.precoAtual * a.quantidade * a.dividendYield) / 100, 0);
+  const rendaMensal = rendaAnual / 12;
+  const rendaDiaria = rendaAnual / 365;
+  const dyMedio = totalAtual > 0 ? (rendaAnual / totalAtual) * 100 : 0;
 
   // Pie chart data: allocation by tipo
-  const alocacaoPorTipo = ativos.reduce<Record<string, number>>((acc, a) => {
+  const alocacaoPorTipo = ativosLive.reduce<Record<string, number>>((acc, a) => {
     acc[a.tipo] = (acc[a.tipo] || 0) + a.precoAtual * a.quantidade;
     return acc;
   }, {});
   const pieData = Object.entries(alocacaoPorTipo).map(([name, value]) => ({ name, value }));
 
   // Pie chart data: allocation by ticker (top assets)
-  const alocacaoPorTicker = ativos
+  const alocacaoPorTicker = ativosLive
     .map(a => ({ name: a.ticker, value: a.precoAtual * a.quantidade }))
     .sort((a, b) => b.value - a.value);
 
@@ -228,6 +248,35 @@ const Carteira = () => {
           </motion.div>
         ))}
       </div>
+
+      {/* Projeções de renda passiva */}
+      {ativosLive.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-xl p-6 border border-primary/30 glow-primary">
+          <div className="flex items-center gap-2 mb-4">
+            <Activity className="w-5 h-5 text-primary animate-pulse" />
+            <h2 className="font-display text-lg font-bold text-foreground">⚡ PROJEÇÕES (TEMPO REAL)</h2>
+            <span className="ml-auto text-[10px] font-body text-muted-foreground">
+              atualizado {new Date(priceUpdatedAt).toLocaleTimeString("pt-BR")}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { l: "Renda Diária", v: rendaDiaria },
+              { l: "Renda Mensal", v: rendaMensal },
+              { l: "Renda Anual", v: rendaAnual },
+              { l: "DY Médio", v: dyMedio, pct: true },
+            ].map(c => (
+              <div key={c.l} className="p-4 rounded-lg bg-secondary/40 border border-border">
+                <p className="font-body text-xs text-muted-foreground">{c.l}</p>
+                <p className="font-display text-lg font-bold text-success">
+                  {c.pct ? `${c.v.toFixed(2)}%` : `R$ ${c.v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Charts */}
       {ativos.length > 0 && (
@@ -349,9 +398,9 @@ const Carteira = () => {
       </AnimatePresence>
 
       {/* Tabela de ativos */}
-      {ativos.length > 0 && (
+      {ativosLive.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-xl p-6 border border-border">
-          <h2 className="font-display text-lg font-bold text-foreground mb-4">📋 ATIVOS EM CARTEIRA</h2>
+          <h2 className="font-display text-lg font-bold text-foreground mb-4">📋 ATIVOS EM CARTEIRA <span className="text-xs text-muted-foreground font-body">(qtd editável)</span></h2>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -362,13 +411,17 @@ const Carteira = () => {
                 </tr>
               </thead>
               <tbody>
-                {ativos.map(a => {
+                {ativosLive.map(a => {
                   const lucro = ((a.precoAtual - a.precoMedio) / a.precoMedio) * 100;
                   return (
                     <tr key={a.id} className="border-b border-border/50 hover:bg-secondary/30 transition-all">
                       <td className="py-3 px-2 font-body font-bold text-primary">{a.ticker}</td>
                       <td className="py-3 px-2 font-body"><span className="px-2 py-0.5 rounded text-xs font-display bg-primary/10 text-primary">{a.tipo}</span></td>
-                      <td className="py-3 px-2 font-body">{a.quantidade}</td>
+                      <td className="py-3 px-2 font-body">
+                        <Input type="number" min="0" value={a.quantidade}
+                          onChange={e => updateQuantidade(a.id, Number(e.target.value))}
+                          className="w-20 h-8 text-sm font-body bg-secondary/40 border-primary/20" />
+                      </td>
                       <td className="py-3 px-2 font-body">R$ {a.precoMedio.toFixed(2)}</td>
                       <td className="py-3 px-2 font-body">R$ {a.precoAtual.toFixed(2)}</td>
                       <td className="py-3 px-2 font-body text-success font-bold">{a.dividendYield.toFixed(1)}%</td>
