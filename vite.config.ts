@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 8080,
@@ -12,20 +12,29 @@ export default defineConfig(({ mode }) => ({
   },
 
   build: {
-    minify: false,
+    minify: "esbuild",
     target: "esnext",
     chunkSizeWarningLimit: 1000,
+
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ["react", "react-dom"],
+          query: ["@tanstack/react-query"],
+          charts: ["recharts"],
+          motion: ["framer-motion"],
+        },
+      },
+    },
   },
 
-  plugins: [
-    react(),
-    mode === "development" && componentTagger(),
-  ].filter(Boolean),
+  plugins: [react()],
 
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+
     dedupe: [
       "react",
       "react-dom",
@@ -35,4 +44,4 @@ export default defineConfig(({ mode }) => ({
       "@tanstack/query-core",
     ],
   },
-}));
+});
